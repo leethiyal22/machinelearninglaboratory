@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Prediction System Using Machine Learning</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="brand">
+                <div class="brand-icon">⚕</div>
+                <div class="brand-text">
+                    <h1>Diabetes Prediction System</h1>
+                    <p>Machine Learning Demonstration & Educational Classifier</p>
+                </div>
+            </div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#dataset-overview">Dataset</a></li>
+                    <li><a href="#preprocessing">Preprocessing</a></li>
+                    <li><a href="#eda">EDA</a></li>
+                    <li><a href="#model-training">Models</a></li>
+                    <li><a href="#model-evaluation">Evaluation</a></li>
+                    <li><a href="#prediction-form" style="color: var(--primary); font-weight: 700;">Predict Risk</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Prominent Disclaimer Banner -->
+        <div class="disclaimer-banner">
+            <div class="disclaimer-icon">⚠️</div>
+            <div class="disclaimer-content">
+                <h4>Academic & Educational Demonstration Only</h4>
+                <p>This application is developed strictly for educational and machine learning demonstration purposes. It utilizes statistical pattern recognition on historical data and <strong>is not a certified medical diagnostic device or clinical diagnosis tool</strong>. Model estimates do not represent true medical certainty. Please consult a qualified healthcare provider for clinical assessments.</p>
+            </div>
+        </div>
+
+        <!-- Fig. 1: Dataset Overview -->
+        <section id="dataset-overview" class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span>Fig. 1 — Dataset Overview</span>
+                </h2>
+                <span class="card-badge">Pima Indians Diabetes Database</span>
+            </div>
+            <p class="card-description">
+                The system utilizes recorded physiological measurements from the Pima Indians Diabetes Database. All records are diagnostic observations collected from female patients aged 21 and above.
+            </p>
+
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Total Observations</div>
+                    <div class="stat-value">{{ metadata.dataset_info.total_records }}</div>
+                    <div class="stat-sub">Valid clinical rows</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Input Features</div>
+                    <div class="stat-value">{{ metadata.dataset_info.total_features }}</div>
+                    <div class="stat-sub">Numeric clinical parameters</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Negative Class (0)</div>
+                    <div class="stat-value">{{ metadata.dataset_info.outcome_counts.negative_0 }}</div>
+                    <div class="stat-sub">65.1% of dataset</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Positive Class (1)</div>
+                    <div class="stat-value">{{ metadata.dataset_info.outcome_counts.positive_1 }}</div>
+                    <div class="stat-sub">34.9% of dataset</div>
+                </div>
+            </div>
+
+            <h3 style="font-size: 1rem; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--text-main);">Dataset Preview (First 5 Real Patient Records)</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            {% for col in metadata.dataset_info.feature_names %}
+                            <th>{{ col }}</th>
+                            {% endfor %}
+                            <th>Outcome</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in metadata.dataset_info.preview_records %}
+                        <tr>
+                            <td>{{ row.Pregnancies }}</td>
+                            <td>{{ row.Glucose }}</td>
+                            <td>{{ row.BloodPressure }}</td>
+                            <td>{{ row.SkinThickness }}</td>
+                            <td>{{ row.Insulin }}</td>
+                            <td>{{ row.BMI }}</td>
+                            <td>{{ row.DiabetesPedigreeFunction }}</td>
+                            <td>{{ row.Age }}</td>
+                            <td>
+                                {% if row.Outcome == 1 %}
+                                <span class="badge-pill badge-outcome-1">Positive (1)</span>
+                                {% else %}
+                                <span class="badge-pill badge-outcome-0">Negative (0)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Fig. 2: Data Preprocessing -->
+        <section id="preprocessing" class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span>Fig. 2 — Data Preprocessing</span>
+                </h2>
+                <span class="card-badge">Zero-Anomaly Handling & Scaling</span>
+            </div>
+            <p class="card-description">
+                In medical data, specific measurements such as blood glucose, blood pressure, triceps skin fold, serum insulin, and BMI cannot biologically equal zero in living individuals. Rather than blindly dropping or replacing all zeros, the preprocessing pipeline applies domain-specific verification.
+            </p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Feature Column</th>
+                            <th>Zero Count</th>
+                            <th>Percentage</th>
+                            <th>Biological Interpretation</th>
+                            <th>Pipeline Strategy</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for col, zinfo in metadata.dataset_info.zeros_summary.items() if col != 'Outcome' %}
+                        <tr>
+                            <td><strong>{{ col }}</strong></td>
+                            <td>{{ zinfo.count }}</td>
+                            <td>{{ zinfo.percent }}%</td>
+                            <td>
+                                {% if zinfo.treated_as_missing %}
+                                <span style="color: #b45309; font-weight: 600;">Physiologically Invalid (Missing Measurement)</span>
+                                {% elif col == 'Pregnancies' %}
+                                <span style="color: #047857; font-weight: 600;">Valid Natural Value (0 prior pregnancies)</span>
+                                {% else %}
+                                <span style="color: #047857; font-weight: 600;">Valid Recorded Value (&gt; 0)</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if zinfo.treated_as_missing %}
+                                <span class="badge-pill badge-treated">Replaced with Train Median</span>
+                                {% else %}
+                                <span class="badge-pill badge-valid">Preserved as Zero</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="stat-grid" style="margin-top: 1.5rem;">
+                <div class="stat-item">
+                    <div class="stat-label">Duplicate Records</div>
+                    <div class="stat-value">{{ metadata.dataset_info.duplicates_count }}</div>
+                    <div class="stat-sub">Clean integrity verified</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Train-Test Split</div>
+                    <div class="stat-value">{{ metadata.train_test_split.split_ratio }}</div>
+                    <div class="stat-sub">Stratified with random seed 42</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Training Partition</div>
+                    <div class="stat-value">{{ metadata.train_test_split.train_size }} rows</div>
+                    <div class="stat-sub">Used strictly for model fitting</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Held-out Test Partition</div>
+                    <div class="stat-value">{{ metadata.train_test_split.test_size }} rows</div>
+                    <div class="stat-sub">Used for unbiased metric calculation</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fig. 3: Exploratory Data Analysis -->
+        <section id="eda" class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span>Fig. 3 — Exploratory Data Analysis (EDA)</span>
+                </h2>
+                <span class="card-badge">Generated from Recorded Data</span>
+            </div>
+            <p class="card-description">
+                Exploratory data analysis reveals underlying statistical distributions and correlations between clinical parameters and diabetes outcome.
+            </p>
+
+            <div class="plots-grid">
+                <div class="plot-card">
+                    <img src="{{ url_for('static', filename='plots/outcome_distribution.png') }}" alt="Diabetes Outcome Distribution" class="plot-img">
+                    <div class="plot-caption">
+                        <div class="plot-title">Outcome Class Distribution</div>
+                        <div class="plot-desc">Quantifies class balance (65.1% negative vs 34.9% positive), demonstrating moderate class imbalance.</div>
+                    </div>
+                </div>
+                <div class="plot-card">
+                    <img src="{{ url_for('static', filename='plots/glucose_vs_outcome.png') }}" alt="Glucose Level vs Outcome" class="plot-img">
+                    <div class="plot-caption">
+                        <div class="plot-title">Glucose Level vs Diabetes Outcome</div>
+                        <div class="plot-desc">Plasma glucose concentration demonstrates substantial upward shift among diabetes-positive patients.</div>
+                    </div>
+                </div>
+                <div class="plot-card">
+                    <img src="{{ url_for('static', filename='plots/bmi_distribution.png') }}" alt="BMI Distribution" class="plot-img">
+                    <div class="plot-caption">
+                        <div class="plot-title">Body Mass Index (BMI) Distribution</div>
+                        <div class="plot-desc">Higher BMI values correlate positively with increased diabetes occurrence across both cohorts.</div>
+                    </div>
+                </div>
+                <div class="plot-card">
+                    <img src="{{ url_for('static', filename='plots/age_distribution.png') }}" alt="Age Distribution" class="plot-img">
+                    <div class="plot-caption">
+                        <div class="plot-title">Age Distribution</div>
+                        <div class="plot-desc">Older patients exhibit higher proportions of positive classification outcomes compared to younger adults.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <div class="plot-card" style="max-width: 800px; margin: 0 auto;">
+                    <img src="{{ url_for('static', filename='plots/correlation_heatmap.png') }}" alt="Correlation Heatmap" class="plot-img">
+                    <div class="plot-caption">
+                        <div class="plot-title">Feature Correlation Matrix Heatmap</div>
+                        <div class="plot-desc">Pearson correlation coefficients indicate Glucose (0.47) and BMI (0.29) hold the highest positive linear association with the target outcome.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fig. 4: Model Training -->
+        <section id="model-training" class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span>Fig. 4 — Model Training & Comparison</span>
+                </h2>
+                <span class="card-badge">Trained on Identical Split</span>
+            </div>
+            <p class="card-description">
+                Three supervised machine learning algorithms were trained and evaluated on identical stratified 80:20 training and test splits. Preprocessing pipelines ensure zero data leakage.
+            </p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Classification Model</th>
+                            <th>Accuracy</th>
+                            <th>Precision</th>
+                            <th>Recall</th>
+                            <th>F1-Score</th>
+                            <th>ROC-AUC</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m_name, m_metrics in metadata.model_comparison.items() %}
+                        <tr {% if m_name == metadata.selected_model.name %}style="background-color: #f0fdf4; font-weight: 600;"{% endif %}>
+                            <td><strong>{{ m_name }}</strong></td>
+                            <td>{{ "%.2f"|format(m_metrics.accuracy * 100) }}%</td>
+                            <td>{{ "%.2f"|format(m_metrics.precision * 100) }}%</td>
+                            <td>{{ "%.2f"|format(m_metrics.recall * 100) }}%</td>
+                            <td>{{ "%.4f"|format(m_metrics.f1_score) }}</td>
+                            <td>{{ "%.4f"|format(m_metrics.roc_auc) }}</td>
+                            <td>
+                                {% if m_name == metadata.selected_model.name %}
+                                <span class="badge-pill badge-outcome-0">Selected Best Pipeline</span>
+                                {% else %}
+                                <span class="badge-pill badge-valid">Candidate Model</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <img src="{{ url_for('static', filename='plots/model_comparison.png') }}" alt="Model Comparison Chart" style="max-width: 100%; height: auto; border: 1px solid var(--border-color); border-radius: 8px;">
+            </div>
+
+            <div style="margin-top: 1.5rem; background-color: var(--bg-main); padding: 1rem 1.25rem; border-radius: 8px; border-left: 4px solid var(--primary);">
+                <strong>Model Selection Rationale:</strong>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 0.35rem;">
+                    In clinical screening domains, evaluating classifiers strictly by accuracy can conceal severe false negatives. We select the winning model based on <strong>ROC-AUC (Receiver Operating Characteristic - Area Under Curve)</strong> and <strong>F1-score</strong>. ROC-AUC evaluates true positive vs false positive discrimination across all classification thresholds, making it robust against class imbalance.
+                </p>
+            </div>
+        </section>
+
+        <!-- Fig. 5: Model Evaluation -->
+        <section id="model-evaluation" class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span>Fig. 5 — Model Evaluation</span>
+                </h2>
+                <span class="card-badge">Selected: {{ metadata.selected_model.name }}</span>
+            </div>
+            <p class="card-description">
+                Evaluation metrics computed exclusively on the held-out test dataset (154 real observations) without data leakage.
+            </p>
+
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Test Accuracy</div>
+                    <div class="stat-value">{{ "%.1f"|format(metadata.selected_model.metrics.accuracy * 100) }}%</div>
+                    <div class="stat-sub">Overall correct classifications</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Test Precision</div>
+                    <div class="stat-value">{{ "%.1f"|format(metadata.selected_model.metrics.precision * 100) }}%</div>
+                    <div class="stat-sub">Positive predictive value</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Test Recall</div>
+                    <div class="stat-value">{{ "%.1f"|format(metadata.selected_model.metrics.recall * 100) }}%</div>
+                    <div class="stat-sub">True positive sensitivity</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">F1-Score</div>
+                    <div class="stat-value">{{ "%.3f"|format(metadata.selected_model.metrics.f1_score) }}</div>
+                    <div class="stat-sub">Harmonic mean of Prec & Rec</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">ROC-AUC</div>
+                    <div class="stat-value">{{ "%.3f"|format(metadata.selected_model.metrics.roc_auc) }}</div>
+                    <div class="stat-sub">Discriminative capacity</div>
+                </div>
+            </div>
+
+            <div class="plots-grid" style="margin-top: 1.5rem;">
+                <div class="plot-card">
+                    <img src="{{ url_for('static', filename='plots/confusion_matrix.png') }}" alt="Confusion Matrix" class="plot-img">
+                    <div class="plot-caption">
+                        <div class="plot-title">Confusion Matrix (Held-out Test Split)</div>
+                        <div class="plot-desc">Visualizes True Negatives (TN), False Positives (FP), False Negatives (FN), and True Positives (TP).</div>
+                    </div>
+                </div>
+                <div class="plot-card">
+                    <img src="{{ url_for('static', filename='plots/roc_curve.png') }}" alt="ROC Curve" class="plot-img">
+                    <div class="plot-caption">
+                        <div class="plot-title">ROC Curves Comparison</div>
+                        <div class="plot-desc">Demonstrates trade-off between sensitivity and specificity across operating decision thresholds.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fig. 6: Diabetes Prediction Form -->
+        <section id="prediction-form" class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span>Fig. 6 — Diabetes Prediction</span>
+                </h2>
+                <span class="card-badge">Local Inference Pipeline</span>
+            </div>
+            <p class="card-description">
+                Enter physiological indicators below to generate a model-estimated classification using the trained and saved scikit-learn pipeline.
+            </p>
+
+            {% if errors %}
+            <div class="alert-error">
+                <strong>Please resolve the following input issues:</strong>
+                <ul>
+                    {% for error in errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <form action="/predict#prediction-result" method="POST" id="diabetesForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="Pregnancies">
+                            <span>Pregnancies</span>
+                            <span class="form-unit">[0 - 25]</span>
+                        </label>
+                        <input type="number" id="Pregnancies" name="Pregnancies" class="form-input" min="0" max="25" step="1" required
+                               value="{{ form_values.get('Pregnancies', '') }}" placeholder="e.g. 2">
+                        <span class="form-helper">Number of prior pregnancies (0 is normal)</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="Glucose">
+                            <span>Glucose Level</span>
+                            <span class="form-unit">mg/dL [0 - 400]</span>
+                        </label>
+                        <input type="number" id="Glucose" name="Glucose" class="form-input" min="0" max="400" step="any" required
+                               value="{{ form_values.get('Glucose', '') }}" placeholder="e.g. 115">
+                        <span class="form-helper">2-hour plasma glucose concentration</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="BloodPressure">
+                            <span>Blood Pressure</span>
+                            <span class="form-unit">mm Hg [0 - 240]</span>
+                        </label>
+                        <input type="number" id="BloodPressure" name="BloodPressure" class="form-input" min="0" max="240" step="any" required
+                               value="{{ form_values.get('BloodPressure', '') }}" placeholder="e.g. 70">
+                        <span class="form-helper">Diastolic blood pressure</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="SkinThickness">
+                            <span>Skin Thickness</span>
+                            <span class="form-unit">mm [0 - 110]</span>
+                        </label>
+                        <input type="number" id="SkinThickness" name="SkinThickness" class="form-input" min="0" max="110" step="any" required
+                               value="{{ form_values.get('SkinThickness', '') }}" placeholder="e.g. 25">
+                        <span class="form-helper">Triceps skin fold thickness (0 if untested)</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="Insulin">
+                            <span>Insulin Level</span>
+                            <span class="form-unit">μU/mL [0 - 900]</span>
+                        </label>
+                        <input type="number" id="Insulin" name="Insulin" class="form-input" min="0" max="900" step="any" required
+                               value="{{ form_values.get('Insulin', '') }}" placeholder="e.g. 80">
+                        <span class="form-helper">2-Hour serum insulin (0 if untested)</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="BMI">
+                            <span>Body Mass Index (BMI)</span>
+                            <span class="form-unit">kg/m² [0 - 80]</span>
+                        </label>
+                        <input type="number" id="BMI" name="BMI" class="form-input" min="0" max="80" step="0.1" required
+                               value="{{ form_values.get('BMI', '') }}" placeholder="e.g. 28.5">
+                        <span class="form-helper">Weight in kg / (height in m)²</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="DiabetesPedigreeFunction">
+                            <span>Diabetes Pedigree</span>
+                            <span class="form-unit">[0.01 - 3.5]</span>
+                        </label>
+                        <input type="number" id="DiabetesPedigreeFunction" name="DiabetesPedigreeFunction" class="form-input" min="0.01" max="3.5" step="0.001" required
+                               value="{{ form_values.get('DiabetesPedigreeFunction', '') }}" placeholder="e.g. 0.450">
+                        <span class="form-helper">Genetic pedigree risk score</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="Age">
+                            <span>Age</span>
+                            <span class="form-unit">Years [10 - 120]</span>
+                        </label>
+                        <input type="number" id="Age" name="Age" class="form-input" min="10" max="120" step="1" required
+                               value="{{ form_values.get('Age', '') }}" placeholder="e.g. 35">
+                        <span class="form-helper">Patient age in years</span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="predictBtn">
+                        <span>🔍 Predict Category</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                        <span>Reset</span>
+                    </button>
+
+                    <div class="sample-buttons-wrapper">
+                        <button type="button" class="btn btn-secondary btn-sample" onclick="fillSampleNegative()">
+                            Load Negative Sample (Low Risk)
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sample" onclick="fillSamplePositive()">
+                            Load Positive Sample (High Risk)
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Prediction Result Card -->
+            {% if prediction %}
+            <div id="prediction-result" class="prediction-card {% if prediction.class_index == 1 %}prediction-positive{% else %}prediction-negative{% endif %}">
+                <div class="prediction-header">
+                    <div>
+                        <div class="prediction-title">Actual Model-Generated Output</div>
+                        <p style="font-size: 0.95rem; margin-top: 0.25rem;">
+                            <strong>Model Prediction:</strong> {{ prediction.label }}
+                        </p>
+                    </div>
+                    <span class="prediction-badge">
+                        {{ prediction.label }}
+                    </span>
+                </div>
+
+                <div style="font-size: 1.15rem; font-weight: 700; margin: 0.75rem 0;">
+                    <strong>Estimated Model Probability:</strong> {{ prediction.positive_probability }}%
+                </div>
+
+                <div class="probability-bar-container">
+                    <div class="probability-bar-fill {% if prediction.class_index == 1 %}fill-positive{% else %}fill-negative{% endif %}"
+                         style="width: {{ prediction.positive_probability }}%;"></div>
+                </div>
+
+                <div class="probability-text">
+                    <span>Negative Class Probability: {{ prediction.negative_probability }}%</span>
+                    <span>Positive Class Probability: {{ prediction.positive_probability }}%</span>
+                </div>
+
+                <div class="prediction-disclaimer">
+                    <strong>Medical Disclaimer:</strong> This prediction is generated through statistical analysis by a trained machine learning model ({{ metadata.selected_model.name }}). It reflects historical data associations from the Pima Indians dataset and <strong>does not constitute a medical diagnosis or clinical risk assessment</strong>. Always consult a qualified medical professional for health evaluations.
+                </div>
+            </div>
+            {% endif %}
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <p><strong>Diabetes Prediction System Using Machine Learning</strong> — Local College ML Mini-Project</p>
+            <p>Built with Python, Flask, Pandas, NumPy, Scikit-learn, Matplotlib, Seaborn, and Joblib.</p>
+            <p class="footer-disclaimer">
+                DISCLAIMER: This system is built strictly for educational, scientific, and algorithmic demonstration purposes. It does not provide medical advice, diagnosis, or treatment recommendations.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Form Helper Scripts -->
+    <script>
+        function fillSampleNegative() {
+            document.getElementById('Pregnancies').value = '1';
+            document.getElementById('Glucose').value = '85';
+            document.getElementById('BloodPressure').value = '66';
+            document.getElementById('SkinThickness').value = '29';
+            document.getElementById('Insulin').value = '0';
+            document.getElementById('BMI').value = '26.6';
+            document.getElementById('DiabetesPedigreeFunction').value = '0.351';
+            document.getElementById('Age').value = '31';
+        }
+
+        function fillSamplePositive() {
+            document.getElementById('Pregnancies').value = '6';
+            document.getElementById('Glucose').value = '148';
+            document.getElementById('BloodPressure').value = '72';
+            document.getElementById('SkinThickness').value = '35';
+            document.getElementById('Insulin').value = '0';
+            document.getElementById('BMI').value = '33.6';
+            document.getElementById('DiabetesPedigreeFunction').value = '0.627';
+            document.getElementById('Age').value = '50';
+        }
+
+        function clearForm() {
+            document.getElementById('diabetesForm').reset();
+        }
+    </script>
+</body>
+</html>
