@@ -1,0 +1,311 @@
+{
+  "dataset_info": {
+    "total_records": 768,
+    "total_features": 8,
+    "feature_names": [
+      "Pregnancies",
+      "Glucose",
+      "BloodPressure",
+      "SkinThickness",
+      "Insulin",
+      "BMI",
+      "DiabetesPedigreeFunction",
+      "Age"
+    ],
+    "target_column": "Outcome",
+    "outcome_counts": {
+      "negative_0": 500,
+      "positive_1": 268,
+      "positive_ratio": 34.9
+    },
+    "duplicates_count": 0,
+    "missing_nans": {
+      "Pregnancies": 0,
+      "Glucose": 0,
+      "BloodPressure": 0,
+      "SkinThickness": 0,
+      "Insulin": 0,
+      "BMI": 0,
+      "DiabetesPedigreeFunction": 0,
+      "Age": 0,
+      "Outcome": 0
+    },
+    "zeros_summary": {
+      "Pregnancies": {
+        "count": 111,
+        "percent": 14.45,
+        "treated_as_missing": false
+      },
+      "Glucose": {
+        "count": 5,
+        "percent": 0.65,
+        "treated_as_missing": true
+      },
+      "BloodPressure": {
+        "count": 35,
+        "percent": 4.56,
+        "treated_as_missing": true
+      },
+      "SkinThickness": {
+        "count": 227,
+        "percent": 29.56,
+        "treated_as_missing": true
+      },
+      "Insulin": {
+        "count": 374,
+        "percent": 48.7,
+        "treated_as_missing": true
+      },
+      "BMI": {
+        "count": 11,
+        "percent": 1.43,
+        "treated_as_missing": true
+      },
+      "DiabetesPedigreeFunction": {
+        "count": 0,
+        "percent": 0.0,
+        "treated_as_missing": false
+      },
+      "Age": {
+        "count": 0,
+        "percent": 0.0,
+        "treated_as_missing": false
+      },
+      "Outcome": {
+        "count": 500,
+        "percent": 65.1,
+        "treated_as_missing": false
+      }
+    },
+    "preview_records": [
+      {
+        "Pregnancies": 6,
+        "Glucose": 148,
+        "BloodPressure": 72,
+        "SkinThickness": 35,
+        "Insulin": 0,
+        "BMI": 33.6,
+        "DiabetesPedigreeFunction": 0.627,
+        "Age": 50,
+        "Outcome": 1
+      },
+      {
+        "Pregnancies": 1,
+        "Glucose": 85,
+        "BloodPressure": 66,
+        "SkinThickness": 29,
+        "Insulin": 0,
+        "BMI": 26.6,
+        "DiabetesPedigreeFunction": 0.351,
+        "Age": 31,
+        "Outcome": 0
+      },
+      {
+        "Pregnancies": 8,
+        "Glucose": 183,
+        "BloodPressure": 64,
+        "SkinThickness": 0,
+        "Insulin": 0,
+        "BMI": 23.3,
+        "DiabetesPedigreeFunction": 0.672,
+        "Age": 32,
+        "Outcome": 1
+      },
+      {
+        "Pregnancies": 1,
+        "Glucose": 89,
+        "BloodPressure": 66,
+        "SkinThickness": 23,
+        "Insulin": 94,
+        "BMI": 28.1,
+        "DiabetesPedigreeFunction": 0.167,
+        "Age": 21,
+        "Outcome": 0
+      },
+      {
+        "Pregnancies": 0,
+        "Glucose": 137,
+        "BloodPressure": 40,
+        "SkinThickness": 35,
+        "Insulin": 168,
+        "BMI": 43.1,
+        "DiabetesPedigreeFunction": 2.288,
+        "Age": 33,
+        "Outcome": 1
+      }
+    ],
+    "summary_stats": {
+      "Pregnancies": {
+        "count": 768.0,
+        "mean": 3.85,
+        "std": 3.37,
+        "min": 0.0,
+        "25%": 1.0,
+        "50%": 3.0,
+        "75%": 6.0,
+        "max": 17.0
+      },
+      "Glucose": {
+        "count": 768.0,
+        "mean": 120.89,
+        "std": 31.97,
+        "min": 0.0,
+        "25%": 99.0,
+        "50%": 117.0,
+        "75%": 140.25,
+        "max": 199.0
+      },
+      "BloodPressure": {
+        "count": 768.0,
+        "mean": 69.11,
+        "std": 19.36,
+        "min": 0.0,
+        "25%": 62.0,
+        "50%": 72.0,
+        "75%": 80.0,
+        "max": 122.0
+      },
+      "SkinThickness": {
+        "count": 768.0,
+        "mean": 20.54,
+        "std": 15.95,
+        "min": 0.0,
+        "25%": 0.0,
+        "50%": 23.0,
+        "75%": 32.0,
+        "max": 99.0
+      },
+      "Insulin": {
+        "count": 768.0,
+        "mean": 79.8,
+        "std": 115.24,
+        "min": 0.0,
+        "25%": 0.0,
+        "50%": 30.5,
+        "75%": 127.25,
+        "max": 846.0
+      },
+      "BMI": {
+        "count": 768.0,
+        "mean": 31.99,
+        "std": 7.88,
+        "min": 0.0,
+        "25%": 27.3,
+        "50%": 32.0,
+        "75%": 36.6,
+        "max": 67.1
+      },
+      "DiabetesPedigreeFunction": {
+        "count": 768.0,
+        "mean": 0.47,
+        "std": 0.33,
+        "min": 0.08,
+        "25%": 0.24,
+        "50%": 0.37,
+        "75%": 0.63,
+        "max": 2.42
+      },
+      "Age": {
+        "count": 768.0,
+        "mean": 33.24,
+        "std": 11.76,
+        "min": 21.0,
+        "25%": 24.0,
+        "50%": 29.0,
+        "75%": 41.0,
+        "max": 81.0
+      },
+      "Outcome": {
+        "count": 768.0,
+        "mean": 0.35,
+        "std": 0.48,
+        "min": 0.0,
+        "25%": 0.0,
+        "50%": 0.0,
+        "75%": 1.0,
+        "max": 1.0
+      }
+    }
+  },
+  "train_test_split": {
+    "train_size": 614,
+    "test_size": 154,
+    "split_ratio": "80:20",
+    "random_seed": 42,
+    "stratified": true
+  },
+  "model_comparison": {
+    "Logistic Regression": {
+      "accuracy": 0.7338,
+      "precision": 0.6032,
+      "recall": 0.7037,
+      "f1_score": 0.6496,
+      "roc_auc": 0.8126,
+      "confusion_matrix": [
+        [
+          75,
+          25
+        ],
+        [
+          16,
+          38
+        ]
+      ]
+    },
+    "Decision Tree": {
+      "accuracy": 0.7727,
+      "precision": 0.6557,
+      "recall": 0.7407,
+      "f1_score": 0.6957,
+      "roc_auc": 0.8039,
+      "confusion_matrix": [
+        [
+          79,
+          21
+        ],
+        [
+          14,
+          40
+        ]
+      ]
+    },
+    "Random Forest": {
+      "accuracy": 0.7597,
+      "precision": 0.6441,
+      "recall": 0.7037,
+      "f1_score": 0.6726,
+      "roc_auc": 0.8213,
+      "confusion_matrix": [
+        [
+          79,
+          21
+        ],
+        [
+          16,
+          38
+        ]
+      ]
+    }
+  },
+  "selected_model": {
+    "name": "Random Forest",
+    "selection_criterion": "Highest ROC-AUC score on test set with balanced sensitivity",
+    "metrics": {
+      "accuracy": 0.7597,
+      "precision": 0.6441,
+      "recall": 0.7037,
+      "f1_score": 0.6726,
+      "roc_auc": 0.8213,
+      "confusion_matrix": [
+        [
+          79,
+          21
+        ],
+        [
+          16,
+          38
+        ]
+      ]
+    }
+  }
+}
